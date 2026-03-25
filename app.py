@@ -8,7 +8,6 @@ import os
 app = Flask(__name__)
 
 HTML = """
-<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -19,13 +18,13 @@ HTML = """
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #0a0a0f;
-    --surface: #13131a;
-    --border: #1e1e2e;
-    --accent: #6c63ff;
-    --accent2: #ff6584;
-    --text: #e8e8f0;
-    --muted: #6b6b80;
+    --bg: #e6f0fa;        /* sky blue background */
+    --surface: #ffffff;    /* white card */
+    --border: #bdd4e7;
+    --accent: #3b82f6;     /* sky blue accent */
+    --accent2: #38bdf8;    /* lighter sky blue */
+    --text: #1e293b;
+    --muted: #5a6e85;
     --success: #4ade80;
   }
 
@@ -48,7 +47,7 @@ HTML = """
     left: -20%;
     width: 70vw;
     height: 70vw;
-    background: radial-gradient(circle, rgba(108,99,255,0.07) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -60,7 +59,7 @@ HTML = """
     right: -10%;
     width: 50vw;
     height: 50vw;
-    background: radial-gradient(circle, rgba(255,101,132,0.05) 0%, transparent 70%);
+    background: radial-gradient(circle, rgba(56,189,248,0.05) 0%, transparent 70%);
     pointer-events: none;
     z-index: 0;
   }
@@ -74,7 +73,7 @@ HTML = """
     padding: 3rem 3.5rem;
     width: 100%;
     max-width: 520px;
-    box-shadow: 0 0 60px rgba(108,99,255,0.08);
+    box-shadow: 0 0 60px rgba(59,130,246,0.1);
   }
 
   .badge {
@@ -85,8 +84,8 @@ HTML = """
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--accent);
-    border: 1px solid rgba(108,99,255,0.3);
-    background: rgba(108,99,255,0.08);
+    border: 1px solid rgba(59,130,246,0.3);
+    background: rgba(59,130,246,0.08);
     padding: 0.3rem 0.8rem;
     border-radius: 100px;
     margin-bottom: 1.2rem;
@@ -144,12 +143,12 @@ HTML = """
     padding: 1.2rem 1.4rem;
     cursor: pointer;
     transition: border-color 0.2s, background 0.2s;
-    background: rgba(255,255,255,0.015);
+    background: rgba(59,130,246,0.015);
   }
 
   .file-box:hover {
     border-color: var(--accent);
-    background: rgba(108,99,255,0.04);
+    background: rgba(59,130,246,0.04);
   }
 
   .file-box input[type="file"] {
@@ -199,7 +198,7 @@ HTML = """
     font-weight: 600;
     letter-spacing: 0.04em;
     cursor: pointer;
-    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
     color: #fff;
     transition: opacity 0.2s, transform 0.15s;
     position: relative;
@@ -218,33 +217,12 @@ HTML = """
     display: none;
   }
 
-  .status.loading {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-    background: rgba(108,99,255,0.08);
-    border: 1px solid rgba(108,99,255,0.2);
-    color: var(--accent);
-  }
-
   .status.error {
     display: block;
-    background: rgba(255,101,132,0.08);
-    border: 1px solid rgba(255,101,132,0.2);
+    background: rgba(56,189,248,0.08);
+    border: 1px solid rgba(56,189,248,0.2);
     color: var(--accent2);
   }
-
-  .spinner {
-    width: 16px;
-    height: 16px;
-    border: 2px solid rgba(108,99,255,0.2);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    flex-shrink: 0;
-  }
-
-  @keyframes spin { to { transform: rotate(360deg); } }
 
   .file-box.filled { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.03); }
 </style>
@@ -288,10 +266,6 @@ HTML = """
 
     <button type="submit" class="btn" id="submitBtn">Generate Excel ↗</button>
 
-    <div class="status loading" id="loadingStatus">
-      <div class="spinner"></div>
-      Processing your files, please wait…
-    </div>
     <div class="status error" id="errorStatus"></div>
   </form>
 </div>
@@ -314,11 +288,9 @@ HTML = """
   document.getElementById('uploadForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
-    const loading = document.getElementById('loadingStatus');
     const errorEl = document.getElementById('errorStatus');
 
     btn.disabled = true;
-    loading.style.display = 'flex';
     errorEl.style.display = 'none';
 
     const formData = new FormData(this);
@@ -341,7 +313,6 @@ HTML = """
       errorEl.style.display = 'block';
     } finally {
       btn.disabled = false;
-      loading.style.display = 'none';
     }
   });
 </script>

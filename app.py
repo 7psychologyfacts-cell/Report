@@ -8,6 +8,7 @@ import os
 app = Flask(__name__)
 
 HTML = """
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -209,21 +210,19 @@ HTML = """
   .btn:active { transform: translateY(0); }
   .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
+  /* Error status styling - hidden initially */
   .status {
     margin-top: 1.2rem;
     padding: 0.9rem 1.2rem;
     border-radius: 10px;
     font-size: 0.85rem;
     display: none;
-  }
-
-  .status.error {
-    display: block;
     background: rgba(56,189,248,0.08);
     border: 1px solid rgba(56,189,248,0.2);
     color: var(--accent2);
   }
 
+  /* When we want to show it, we set display: block via JS */
   .file-box.filled { border-color: rgba(74,222,128,0.4); background: rgba(74,222,128,0.03); }
 </style>
 </head>
@@ -266,7 +265,7 @@ HTML = """
 
     <button type="submit" class="btn" id="submitBtn">Generate Excel ↗</button>
 
-    <div class="status error" id="errorStatus"></div>
+    <div class="status" id="errorStatus"></div>
   </form>
 </div>
 
@@ -292,6 +291,7 @@ HTML = """
 
     btn.disabled = true;
     errorEl.style.display = 'none';
+    errorEl.textContent = ''; // clear previous message
 
     const formData = new FormData(this);
 

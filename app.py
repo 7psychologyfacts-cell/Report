@@ -378,6 +378,9 @@ def process():
         for col in date_columns:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col], errors="coerce", dayfirst=True)
+                # Excel doesn't support timezone-aware datetimes — strip tz info if present
+                if hasattr(df[col].dtype, "tz") and df[col].dtype.tz is not None:
+                    df[col] = df[col].dt.tz_localize(None)
 
         # =============================
         # 7️⃣ FILTER UNIT_NAME
@@ -440,6 +443,13 @@ def process():
         ]
         final_cols = [c for c in final_cols if c in df.columns]
         final_df = df[final_cols]
+
+        # =============================
+        # 1️⃣2️⃣.5 SAFETY: STRIP ANY REMAINING TZ-AWARE DATETIME COLUMNS
+        # =============================
+        for col in final_df.columns:
+            if pd.api.types.is_datetime64tz_dtype(final_df[col]):
+                final_df[col] = final_df[col].dt.tz_localize(None)
 
         # =============================
         # 1️⃣3️⃣ SAVE → OPENPYXL FORMATTING

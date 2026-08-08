@@ -375,12 +375,29 @@ def process():
         # 6️⃣ DATE FIX
         # =============================
         date_columns = ["FILE_SUBMISSION_DT", "UTR DATE", "INVOICE DATE", "RECONCILED DATE"]
+
+        def format_dates_keep_all(cell_value):
+            """
+            Some cells contain multiple comma-separated dates (e.g. a case settled
+            twice: "07-08-2026, 26-06-2026"). Parsing this directly as a single
+            datetime confuses pandas (part of the string gets misread as a
+            timezone offset) and Excel then rejects tz-aware datetimes.
+            Instead, parse EACH date part separately, format it, and rejoin —
+            so all dates are preserved as clean text, no tz issue at all.
+            """
+            if pd.isna(cell_value):
+                return ""
+            parts = [p.strip() for p in str(cell_value).split(",") if p.strip()]
+            formatted = []
+            for p in parts:
+                d = pd.to_datetime(p, errors="coerce", dayfirst=True)
+                if pd.notna(d):
+                    formatted.append(d.strftime("%d-%m-%Y"))
+            return ", ".join(formatted)
+
         for col in date_columns:
             if col in df.columns:
-                df[col] = pd.to_datetime(df[col], errors="coerce", dayfirst=True)
-                # Excel doesn't support timezone-aware datetimes — strip tz info if present
-                if hasattr(df[col].dtype, "tz") and df[col].dtype.tz is not None:
-                    df[col] = df[col].dt.tz_localize(None)
+                df[col] = df[col].apply(format_dates_keep_all)
 
         # =============================
         # 7️⃣ FILTER UNIT_NAME
@@ -448,7 +465,7 @@ def process():
         # 1️⃣2️⃣.5 SAFETY: STRIP ANY REMAINING TZ-AWARE DATETIME COLUMNS
         # =============================
         for col in final_df.columns:
-            if pd.api.types.is_datetime64tz_dtype(final_df[col]):
+            if isinstance(final_df[col].dtype, pd.DatetimeTZDtype):
                 final_df[col] = final_df[col].dt.tz_localize(None)
 
         # =============================
@@ -462,13 +479,9 @@ def process():
         ws = wb.active
 
         # DATE FORMAT APPLY
-        for col_name in date_columns:
-            if col_name in final_df.columns:
-                col_index = list(final_df.columns).index(col_name) + 1
-                for row in range(2, ws.max_row + 1):
-                    cell = ws.cell(row=row, column=col_index)
-                    if cell.value:
-                        cell.number_format = "DD-MM-YYYY"
+        # Note: date columns are now stored as formatted text (to safely support
+        # multiple comma-separated dates per cell), so no Excel date number-format
+        # is needed here — the text already reads as DD-MM-YYYY.
 
         # NUMBER FORMAT FIX
         for col in range(1, ws.max_column + 1):
